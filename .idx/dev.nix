@@ -12,6 +12,7 @@
     # pkgs.nodePackages.nodemon
     pkgs.nix-search-cli
     pkgs.envfs
+    pkgs.replxx
   ];
   # Sets environment variables in the workspace
   env = {};
