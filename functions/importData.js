@@ -1,8 +1,8 @@
-const admin = require('firebase-admin');
-const serviceAccount = require('./serviceAccountKey.json');
-const data = require('./ordenes.json');
 
-// Initialize Firebase Admin SDK
+const admin = require('firebase-admin');
+const serviceAccount = require('../serviceAccountKey.json');
+const data = require('../data.json');
+
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
 });
@@ -10,46 +10,32 @@ admin.initializeApp({
 const db = admin.firestore();
 
 async function importData() {
-  console.log('Starting data import...');
-  for (const oc of data) {
-    const docRef = db.collection('purchaseOrders').doc(String(oc.OC));
-
-    const purchaseOrderData = {
-      'Orden de Compra': oc['Orden de Compra'] || null,
-      'Fecha envio': oc['Fecha envio'] ? admin.firestore.Timestamp.fromDate(new Date(oc['Fecha envio'])) : null,
-      'Proveedor': oc['Proveedor'] || null,
-      'Proceso': oc['Proceso'] || null,
-      'Suministro': oc['Suministro'] || null,
-      'Tiempo Entrega': oc['Tiempo Entrega'] || null,
-      'Importe total': typeof oc['Importe total'] === 'number' ? oc['Importe total'] : null
+  for (const order of data) {
+    const docRef = db.collection('purchaseOrders').doc(order.OC);
+    const orderData = {
+      'Orden de Compra': order['Orden de Compra'],
+      'Fecha envio': admin.firestore.Timestamp.fromDate(new Date(order['Fecha envio'])),
+      'Proveedor': order['Proveedor'],
+      'Proceso': order['Proceso'],
+      'Suministro': order['Suministro'],
+      'Tiempo Entrega': order['Tiempo Entrega'],
+      'Importe total': order['Importe total']
     };
 
-    try {
-      await docRef.set(purchaseOrderData);
-      console.log(`Document ${oc.OC} created successfully.`);
+    await docRef.set(orderData);
 
-      // Import items subcollection
-      if (oc.items && Array.isArray(oc.items)) {
-        const batch = db.batch();
-        oc.items.forEach(item => {
-          const itemRef = docRef.collection('items').doc(); // Auto-generate document ID for items
-          batch.set(itemRef, {
-            'Código': item['Código'] || null,
-            'Descripcion': item['Descripcion'] || null,
-            'Cantidad': typeof item['Cantidad'] === 'number' ? item['Cantidad'] : null,
-            'Precio': typeof item['Precio'] === 'number' ? item['Precio'] : null,
-            'Importe': typeof item['Importe'] === 'number' ? item['Importe'] : null,
-          });
-        });
-        await batch.commit();
-        console.log(`Subcollection 'items' for ${oc.OC} imported successfully.`);
-      }
-
-    } catch (error) {
-      console.error(`Error importing document ${oc.OC}:`, error);
+    const itemsCollectionRef = docRef.collection('items');
+    for (const item of order.items) {
+      await itemsCollectionRef.add({
+        'Código': item['Código'],
+        'Descripcion': item['Descripcion'],
+        'Cantidad': item['Cantidad'],
+        'Precio': item['Precio'],
+        'Importe': item['Importe']
+      });
     }
   }
-  console.log('Data import finished.');
+  console.log('Data import complete!');
 }
 
 importData().catch(console.error);
