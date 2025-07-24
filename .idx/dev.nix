@@ -29,7 +29,8 @@
           # and show it in IDX's web preview panel
           command = ["npm" "run" "dev" "--" "--port" "$PORT"];
           manager = "web";
-          workingDir = "client";
+          # The 'workingDir' option does not exist, it should be 'cwd'
+          cwd = "client";
         };
       };
     };
