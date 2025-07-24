@@ -1,6 +1,8 @@
 // importEntries.js
 
-import admin from 'firebase-admin';
+// Use modular imports for Firebase Admin SDK
+import { initializeApp, cert, getApps } from 'firebase-admin/app';
+import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -9,7 +11,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Dynamically import the JSON file
+// Helper function to read and parse a JSON file
 const readJsonFile = (filePath) => {
     const fileContent = fs.readFileSync(filePath, 'utf8');
     return JSON.parse(fileContent);
@@ -34,12 +36,12 @@ async function importEntriesToFirestore() {
     const serviceAccount = readJsonFile(serviceAccountPath);
     
     // Avoid re-initializing the app if it's already been done
-    if (admin.apps.length === 0) {
-        admin.initializeApp({
-            credential: admin.credential.cert(serviceAccount)
+    if (getApps().length === 0) {
+        initializeApp({
+            credential: cert(serviceAccount)
         });
     }
-    const db = admin.firestore();
+    const db = getFirestore();
     console.log('Firebase Admin initialized successfully.');
 
     // 2. Read the entradas_final.json file
@@ -61,7 +63,7 @@ async function importEntriesToFirestore() {
 
       // 7. Convert date fields to Firestore Timestamp objects
       if (entryData['Fecha de Entrega']) {
-        entryData['Fecha de Entrega'] = admin.firestore.Timestamp.fromDate(new Date(entryData['Fecha de Entrega']));
+        entryData['Fecha de Entrega'] = Timestamp.fromDate(new Date(entryData['Fecha de Entrega']));
       }
 
       // 5. Create a new document in the 'entries' collection with an auto-generated ID
