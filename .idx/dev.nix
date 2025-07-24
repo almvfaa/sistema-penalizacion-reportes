@@ -10,6 +10,8 @@
     # pkgs.python311Packages.pip
     pkgs.nodejs_20
     # pkgs.nodePackages.nodemon
+    pkgs.nix-search-cli
+    pkgs.envfs
   ];
   # Sets environment variables in the workspace
   env = {};
