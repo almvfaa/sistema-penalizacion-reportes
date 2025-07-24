@@ -1,8 +1,19 @@
 // importOrders.js
 
-const admin = require('firebase-admin');
-const fs = require('fs');
-const path = require('path');
+import admin from 'firebase-admin';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Helper to get __dirname in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Dynamically import the JSON file
+const readJsonFile = (filePath) => {
+    const fileContent = fs.readFileSync(filePath, 'utf8');
+    return JSON.parse(fileContent);
+};
 
 /**
  * Script to import purchase order data from a JSON file into Firestore.
@@ -20,10 +31,13 @@ async function importDataToFirestore() {
     if (!fs.existsSync(serviceAccountPath)) {
         throw new Error('serviceAccountKey.json not found. Please place it in the project root.');
     }
-    const serviceAccount = require(serviceAccountPath);
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount)
-    });
+    const serviceAccount = readJsonFile(serviceAccountPath);
+    
+    if (admin.apps.length === 0) {
+        admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount)
+        });
+    }
     const db = admin.firestore();
     console.log('Firebase Admin initialized successfully.');
 
@@ -33,10 +47,7 @@ async function importDataToFirestore() {
      if (!fs.existsSync(dataPath)) {
         throw new Error('data.json not found. Please place it in the project root.');
     }
-    const jsonData = fs.readFileSync(dataPath, 'utf8');
-
-    // 3. Parse the JSON content
-    const orders = JSON.parse(jsonData);
+    const orders = readJsonFile(dataPath);
     console.log(`Found ${orders.length} orders to import.`);
 
     const collectionRef = db.collection('orders');
