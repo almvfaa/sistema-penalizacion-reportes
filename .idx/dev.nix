@@ -3,24 +3,23 @@
 { pkgs, ... }: {
   # Which nixpkgs channel to use.
   channel = "stable-24.05"; # or "unstable"
+
   # Use https://search.nixos.org/packages to find packages
   packages = [
-    # pkgs.go
-    # pkgs.python311
-    # pkgs.python311Packages.pip
     pkgs.nodejs_20
-    # pkgs.nodePackages.nodemon
-    pkgs.nix-search-cli
-    pkgs.envfs
-    pkgs.replxx
+    # Add firebase-tools for Firebase CLI commands
+    pkgs.firebase-tools
   ];
+
   # Sets environment variables in the workspace
   env = {};
+
   idx = {
     # Search for the extensions you want on https://open-vsx.org/ and use "publisher.id"
     extensions = [
       # "vscodevim.vim"
     ];
+
     # Enable previews
     previews = {
       enable = true;
@@ -34,12 +33,14 @@
         };
       };
     };
+
     # Workspace lifecycle hooks
     workspace = {
       # Runs when a workspace is first created
       onCreate = {
-        # Example: install JS dependencies from NPM
+        # Install JS dependencies from NPM for both client and functions
         npm-install-client = "cd client && npm install";
+        npm-install-functions = "cd functions && npm install";
         # Open editors for the following files by default, if they exist:
         default.openFiles = [ ".idx/dev.nix" "README.md" ];
       };
